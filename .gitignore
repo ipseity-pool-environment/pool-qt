@@ -29,6 +29,6 @@
 
 
 # Qt and Qt creator files
-*.pro.user
-*.pro.user.3.2-pre1
+*.user
+*.3.2-pre1
 *.autosave
