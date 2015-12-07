@@ -9,6 +9,10 @@
 #include <QMainWindow>
 #include "mainwindow.h"
 
+#define TIMESTEP (1.0f / 60.0f)
+#define V_ITERATIONS 8 //velocity iterations
+#define P_ITERATIONS 3 //position iterations
+
 class MainWindow;
 
 class Game : public QObject
@@ -18,28 +22,31 @@ class Game : public QObject
 public:
 
     Game();
-    Game(MainWindow *w, QApplication *a);
+    Game(MainWindow *w, QApplication *app);
     ~Game();
-    bool isRunning;
-    QApplication *a;
+    bool createWorld();
+
+
+    QApplication *app;
 
     void initTimer();
-    float32 timeStep, velocityIterations, positionIterations;
-    b2Vec2 gravity;
-    b2BodyDef groundBodyDef;
-    b2Body* groundBody;
-    b2PolygonShape groundBox;
-    b2BodyDef bodyDef;
-    b2Body* body;
-    b2PolygonShape dynamicBox;
-    b2FixtureDef fixtureDef;
-    b2Vec2 position;
-    float32 angle;
+
+    b2Body* b2whiteball;
+    b2Body* b2balls[15];
+    b2CircleShape ballShape;
 
 private:
-    QTimer myTimer;
-    b2World* world;
-    MainWindow *window;
+    QTimer m_myTimer;
+    b2Body* cushions[4]; //bandes
+    b2World* m_world;
+    MainWindow *m_window;
+    b2Vec2 m_gravity;
+    b2BodyDef cushionBodyDef[4];
+    b2PolygonShape cushionsShape[4];
+    b2BodyDef ballDef;
+    b2FixtureDef fixtureDef;
+    b2Vec2 boxposition;
+    float32 angle;
 
 
 
@@ -48,6 +55,15 @@ public slots:
 
 };
 
+
+
+/////////////////////////////////////
+/*
+class Tablebody
+{
+    vector<b2BodyDef> cushionsBodyDef;
+
+};*/
 
 
 #endif // GAME_H

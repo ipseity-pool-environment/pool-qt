@@ -4,6 +4,9 @@
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
+#include <QGraphicsSceneMouseEvent>
+#include <QPointF>
+#include <QList>
 
 #include "game.h"
 
@@ -12,6 +15,20 @@ class MainWindow;
 }
 
 class Game;
+
+class GraphicsScene : public QGraphicsScene
+{
+    Q_OBJECT
+public:
+    Game *game;
+    explicit GraphicsScene(QObject *parent = 0);
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * mouseEvent);
+signals:
+
+public slots:
+
+private:
+};
 
 
 class MainWindow : public QMainWindow
@@ -24,14 +41,18 @@ public:
     ~MainWindow();
     Game *game;
 
+    QGraphicsEllipseItem *whiteBall;
+    QGraphicsEllipseItem *balls[15];
+    QGraphicsRectItem *ground[4]; //a changer en vector
+
+
+
+    GraphicsScene *scene;
 public slots:
     void render();
 
 private:
     Ui::MainWindow *ui;
-
-    QGraphicsScene *scene;
-    QGraphicsRectItem *ball;
 
 
 };

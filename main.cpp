@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     Game game(&w, &a);
     w.game = &game;
+    w.scene->game = &game;
     game.initTimer();
 
     w.show();
