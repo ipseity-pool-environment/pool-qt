@@ -42,8 +42,8 @@ public:
     Game *game;
 
     QGraphicsEllipseItem *whiteBall;
-    QGraphicsEllipseItem *balls[15];
-    QGraphicsRectItem *ground[4]; //a changer en vector
+    QList<QGraphicsEllipseItem*> balls;
+    QList<QGraphicsRectItem*> ground;
 
 
 

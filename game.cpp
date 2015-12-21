@@ -9,6 +9,12 @@ Game::Game()
 
 Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app),  m_gravity(0.0f, 0.0f)
 {
+    if(!cfgFileExists())
+    {
+        std::cerr << "ERROR: could not find config.json configuration file\n";
+        std::terminate();
+    }
+    
     m_world = new b2World(m_gravity);
 
     cushionBodyDef[0].position.Set(0.0f, 11.0f);
@@ -33,82 +39,45 @@ Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app),  m_gravity
 
 
 
-    ballDef.type = b2_dynamicBody;
-    ballDef.linearDamping = 0.5f;
+    m_ballDef.type = b2_dynamicBody;
+    m_ballDef.linearDamping = 0.5f;
     ballShape.m_p.Set(0.0f, 0.0f);
     ballShape.m_radius = 0.25;
-    fixtureDef.shape = &ballShape;
-    fixtureDef.density = 1.0f;
-    fixtureDef.friction = 0.1f;
-    fixtureDef.restitution = 0.8f;
+    m_fixtureDef.shape = &ballShape;
+    m_fixtureDef.density = 1.0f;
+    m_fixtureDef.friction = 0.1f;
+    m_fixtureDef.restitution = 0.8f;
 
 
 
-    ballDef.bullet = true;
-    ballDef.position.Set(4.5f, 17.75f);
-    b2balls[0] = m_world->CreateBody(&ballDef);
-    b2balls[0]->CreateFixture(&fixtureDef);
+    m_ballDef.bullet = true;
 
-    ballDef.position.Set(5.0f, 17.75f);
-    b2balls[1] = m_world->CreateBody(&ballDef);
-    b2balls[1]->CreateFixture(&fixtureDef);
+    configFile.setFileName(QString("../pool-qt/res/config.json"));
+    configFile.open(QIODevice::ReadOnly | QIODevice::Text);
 
-    ballDef.position.Set(5.5f, 17.75f);
-    b2balls[2] = m_world->CreateBody(&ballDef);
-    b2balls[2]->CreateFixture(&fixtureDef);
+    configDoc = QJsonDocument::fromJson(configFile.readAll());
 
-    ballDef.position.Set(6.0f, 17.75f);
-    b2balls[3] = m_world->CreateBody(&ballDef);
-    b2balls[3]->CreateFixture(&fixtureDef);
+    configFile.close();
 
-    ballDef.position.Set(6.5f, 17.75f);
-    b2balls[4] = m_world->CreateBody(&ballDef);
-    b2balls[4]->CreateFixture(&fixtureDef);
+    configObj = configDoc.object();
 
-    ballDef.position.Set(4.75f, 17.75f - (7.0f/8.0f)/2.0f);
-    b2balls[5] = m_world->CreateBody(&ballDef);
-    b2balls[5]->CreateFixture(&fixtureDef);
+    ballsPosition = configObj["Positions"].toArray();
 
-    ballDef.position.Set(5.25f, 17.75f - (7.0f/8.0f)/2.0f);
-    b2balls[6] = m_world->CreateBody(&ballDef);
-    b2balls[6]->CreateFixture(&fixtureDef);
 
-    ballDef.position.Set(5.75f, 17.75f - (7.0f/8.0f)/2.0f);
-    b2balls[7] = m_world->CreateBody(&ballDef);
-    b2balls[7]->CreateFixture(&fixtureDef);
 
-    ballDef.position.Set(6.25f, 17.75f - (7.0f/8.0f)/2.0f);
-    b2balls[8] = m_world->CreateBody(&ballDef);
-    b2balls[8]->CreateFixture(&fixtureDef);
+    for(int i = 0; i < 15; ++i)
+    {
+        m_ballDef.position.Set(ballsPosition[i].toObject()["x"].toDouble(), ballsPosition[i].toObject()["y"].toDouble());
+        b2balls[i] = m_world->CreateBody(&m_ballDef);
+        b2balls[i]->CreateFixture(&m_fixtureDef);
+    }
 
-    ballDef.position.Set(5.0f, 17.75f - (7.0f/8.0f));
-    b2balls[9] = m_world->CreateBody(&ballDef);
-    b2balls[9]->CreateFixture(&fixtureDef);
 
-    ballDef.position.Set(5.5f, 17.75f - (7.0f/8.0f));
-    b2balls[10] = m_world->CreateBody(&ballDef);
-    b2balls[10]->CreateFixture(&fixtureDef);
-
-    ballDef.position.Set(6.0f, 17.75f - (7.0f/8.0f));
-    b2balls[11] = m_world->CreateBody(&ballDef);
-    b2balls[11]->CreateFixture(&fixtureDef);
-
-    ballDef.position.Set(5.25f, 17.75f - ((7.0f/8.0f)/2.0f)*3.0f);
-    b2balls[12] = m_world->CreateBody(&ballDef);
-    b2balls[12]->CreateFixture(&fixtureDef);
-
-    ballDef.position.Set(5.75f, 17.75f - ((7.0f/8.0f)/2.0f)*3.0f);
-    b2balls[13] = m_world->CreateBody(&ballDef);
-    b2balls[13]->CreateFixture(&fixtureDef);
-
-    ballDef.position.Set(5.5f, 17.75f - ((7.0f/8.0f)*2.0f));
-    b2balls[14] = m_world->CreateBody(&ballDef);
-    b2balls[14]->CreateFixture(&fixtureDef);
-
-    ballDef.position.Set(5.5f, 5.5f);
-    b2whiteball = m_world->CreateBody(&ballDef);
-    b2whiteball->CreateFixture(&fixtureDef);
+    m_ballDef.position.Set(5.5f, 5.5f);
+    b2whiteball = m_world->CreateBody(&m_ballDef);
+    b2whiteball->CreateFixture(&m_fixtureDef);
 }
+
 
 Game::~Game()
 {
@@ -131,4 +100,15 @@ void Game::update()
     m_world->Step(TIMESTEP, V_ITERATIONS, P_ITERATIONS);
     app->processEvents(QEventLoop::AllEvents);
     m_window->render();
+}
+
+
+
+bool cfgFileExists() {
+    QFileInfo checkFile("../pool-qt/res/config.json");
+    if (checkFile.exists() && checkFile.isFile()) {
+        return true;
+    } else {
+        return false;
+    }
 }

@@ -8,6 +8,11 @@
 #include <Box2D/Box2D.h>
 #include <QMainWindow>
 #include "mainwindow.h"
+#include <iostream>
+#include <QFileInfo>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 #define TIMESTEP (1.0f / 60.0f)
 #define V_ITERATIONS 8 //velocity iterations
@@ -43,11 +48,14 @@ private:
     b2Vec2 m_gravity;
     b2BodyDef cushionBodyDef[4];
     b2PolygonShape cushionsShape[4];
-    b2BodyDef ballDef;
-    b2FixtureDef fixtureDef;
-    b2Vec2 boxposition;
-    float32 angle;
+    b2BodyDef m_ballDef;
+    b2FixtureDef m_fixtureDef;
 
+    QString config;
+    QFile configFile;
+    QJsonDocument configDoc;
+    QJsonObject configObj;
+    QJsonArray ballsPosition;
 
 
 public slots:
@@ -55,6 +63,8 @@ public slots:
 
 };
 
+
+bool cfgFileExists();
 
 
 /////////////////////////////////////
