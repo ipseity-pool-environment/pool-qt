@@ -7,14 +7,14 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPointF>
 #include <QList>
-
 #include "game.h"
 
 namespace Ui {
 class MainWindow;
 }
 
-class Game;
+
+
 
 class GraphicsScene : public QGraphicsScene
 {
@@ -31,19 +31,25 @@ private:
 };
 
 
+
+
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QApplication *app, QWidget *parent = 0);
     ~MainWindow();
-    Game *game;
+    void createBallsItem(QPen outline);
+    void buildTable();
 
     QGraphicsEllipseItem *whiteBall;
     QList<QGraphicsEllipseItem*> balls;
     QList<QGraphicsRectItem*> ground;
+    QList<QGraphicsPolygonItem*> sides;
+    QList<QGraphicsEllipseItem*> holes;
 
 
 
@@ -53,6 +59,9 @@ public slots:
 
 private:
     Ui::MainWindow *ui;
+    float bsize;
+    Game *game;
+    QApplication *app;
 
 
 };

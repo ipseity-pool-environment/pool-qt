@@ -1,4 +1,5 @@
 #include "game.h"
+#include "mainwindow.h"
 
 
 int main(int argc, char *argv[])
@@ -6,11 +7,10 @@ int main(int argc, char *argv[])
 
     
     QApplication a(argc, argv);
-    MainWindow w;
-    Game game(&w, &a);
+    MainWindow w(&a);
+    /*Game game(&w, &a);
     w.game = &game;
-    w.scene->game = &game;
-    game.initTimer();
+    w.scene->game = &game;*/
 
     w.show();
 
