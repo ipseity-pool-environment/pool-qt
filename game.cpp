@@ -1,6 +1,17 @@
 #include "game.h"
 #include "mainwindow.h"
+#include <iostream>
+#include <QFileInfo>
 
+class Ball;
+
+moveBodyTask::moveBodyTask(Ball *ball, int i) : m_ball(ball), m_index(i)
+{}
+
+void moveBodyTask::move()
+{
+    m_ball->m_body->SetTransform(b2Vec2(m_index, 0), 0);
+}
 
 
 
@@ -9,7 +20,7 @@ Game::Game()
 
 }
 
-Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app), m_gravity(0.0f, 0.0f)
+Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app), m_gravity(0.0f, -9.7f)
 {
     if(!cfgFileExists())
     {
@@ -33,14 +44,8 @@ Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app), m_gravity(
     configObj = configDoc.object();
 
     m_world = new b2World(m_gravity);
-    
-    /*m_holeShape.m_radius = 0.1;
-    m_holeFixDef.shape = &m_holeShape;
-    m_holeFixDef.isSensor = true;
-    m_holeBodyDef.type = b2_staticBody;
-    
-    m_world->CreateBody(&m_holeBodyDef);
-    m_holeBody.CreateFixture(&m_holeFixDef);*/
+    m_world->SetContactListener(&listener);
+
 
 
 
@@ -130,6 +135,7 @@ Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app), m_gravity(
     colorMap["Yellow"] = Balls::Yellow;
 
     createBallsBody();
+    createHoles();
 
 }
 
@@ -137,6 +143,27 @@ Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app), m_gravity(
 Game::~Game()
 {
     delete m_world;
+    delete b2whiteball;
+
+    for(int i = 0; i < 6; ++i)
+    {
+        delete m_hole.at(i)->userData;
+        delete m_hole.at(i);
+    }
+
+    for(int i = 0; i < 15; ++i)
+        delete m_balls[i];
+}
+
+
+void Game::potBall(Ball *ball)
+{
+    //m_balls.erase(m_balls.indexOf(ball));
+    m_pottedBalls.append(ball);
+    ball->m_body->SetLinearVelocity(b2Vec2(0,0));
+    m_task.append(new moveBodyTask(ball, m_pottedBalls.size()));
+
+    //ball->m_body->SetGravityScale(1);
 }
 
 
@@ -152,6 +179,13 @@ void Game::initTimer()
 
 void Game::update()
 {
+    while(m_task.size() != 0)
+    {
+        m_task.back()->move();
+        delete m_task.back();
+        m_task.pop_back();
+    }
+
     m_world->Step(TIMESTEP, V_ITERATIONS, P_ITERATIONS);
     app->processEvents(QEventLoop::AllEvents);
     m_window->render();
@@ -177,43 +211,84 @@ void Game::createBallsBody()
 
     for(int i = 0; i < 15; ++i)
     {
-        ball = new Ball(m_world, configObj, i, &colorMap);
+        ball = new Ball(this, configObj, i, &colorMap);
         m_balls.append(ball);
     }
 
-    b2whiteball = new Ball(m_world, configObj, 15, &colorMap);
+    b2whiteball = new Ball(this, configObj, 15, &colorMap);
 
 }
 
-Ball::Ball(b2World *world, QJsonObject configObj, int index, std::map<std::string, Balls::BallsColor> *colorMap)
+void Game::createHoles()
 {
-    m_body = NULL;
-    double radius;
+    b2CircleShape holeShape;
+    b2FixtureDef holeFixDef;
+    b2BodyDef holeBodyDef;
 
-    if(index == 15)
-        radius = configObj["WhiteBallSize"].toDouble() / 2;
+    for(int i = 0; i < 6; ++i)
+    {
+        m_hole.append(new Hole);
+        m_hole.at(i)->userData = new UserData;
+        m_hole.at(i)->userData->game = this;
+        m_hole.at(i)->userData->type = Type::Hole;
+        m_hole.at(i)->userData->ball = NULL;
+
+    }
+
+    holeBodyDef.position.Set(0.25f, 1.75f);
+    m_hole.at(0)->m_body = m_world->CreateBody(&holeBodyDef);
+    holeBodyDef.position.Set(0.f, 11.f);
+    m_hole.at(1)->m_body = m_world->CreateBody(&holeBodyDef);
+    holeBodyDef.position.Set(0.25f, 20.25f);
+    m_hole.at(2)->m_body = m_world->CreateBody(&holeBodyDef);
+    holeBodyDef.position.Set(10.75f, 1.75f);
+    m_hole.at(3)->m_body = m_world->CreateBody(&holeBodyDef);
+    holeBodyDef.position.Set(11.f, 11.f);
+    m_hole.at(4)->m_body = m_world->CreateBody(&holeBodyDef);
+    holeBodyDef.position.Set(10.75f, 20.25f);
+    m_hole.at(5)->m_body = m_world->CreateBody(&holeBodyDef);
+
+
+    holeShape.m_radius = 0.2f;
+    holeFixDef.shape = &holeShape;
+    holeFixDef.isSensor = true;
+
+    for(int i = 0; i < 6; ++i)
+        m_hole.at(i)->m_body->CreateFixture(&holeFixDef);
+}
+
+bool getBallAndHole(b2Contact *contact, Ball*& ball)
+{
+    b2Fixture* fixtureA = contact->GetFixtureA();
+    b2Fixture* fixtureB = contact->GetFixtureB();
+
+    bool sensorA = fixtureA->IsSensor();
+    bool sensorB = fixtureB->IsSensor();
+    if ( ! (sensorA ^ sensorB) )
+              return false;
+
+    UserData *dataA = static_cast<UserData*>(fixtureA->GetBody()->GetUserData());
+    UserData *dataB = static_cast<UserData*>(fixtureB->GetBody()->GetUserData());
+
+    if(sensorA) //if A is a sensor then B is a ball
+        ball = dataB->ball;
+
     else
-        radius = configObj["BallsSize"].toDouble() / 2;
+        ball = dataA->ball;
 
-    b2BodyDef ballDef;
-    b2CircleShape ballShape;
-    b2FixtureDef ballFixDef;
-    ballDef.type = b2_dynamicBody;
-    ballDef.linearDamping = 0.5f;
-    ballDef.angularDamping = 0.5f;
-    ballShape.m_p.Set(0.0f, 0.0f);
-    ballShape.m_radius = radius;
-    ballFixDef.shape = &ballShape;
-    ballFixDef.density = 1.0f;
-    ballFixDef.friction = 0.9f;
-    ballFixDef.restitution = 0.8f;
-    ballDef.bullet = true;
-
-    ballDef.position.Set(configObj["BallsProperties"].toArray()[index].toObject()["x"].toDouble(), configObj["BallsProperties"].toArray()[index].toObject()["y"].toDouble());
-    m_body = world->CreateBody(&ballDef);
-    m_body->CreateFixture(&ballFixDef);
+    return true;
+}
 
 
-    m_color = colorMap->at(configObj["BallsProperties"].toArray()[index].toObject()["color"].toString().toStdString());
+void holeContactListener::BeginContact(b2Contact *contact)
+{
+    /*void* bodyUserDataA = contact->GetFixtureA()->GetBody()->GetUserData();
+    void* bodyUserDataB = contact->GetFixtureB()->GetBody()->GetUserData();*/
+    Ball *ball;
+
+
+    if(getBallAndHole(contact, ball))
+        ball->userData->game->potBall(ball);
+
 
 }

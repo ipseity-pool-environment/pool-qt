@@ -1,36 +1,55 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <QApplication>
-
+#include <ball.h>
 #include <QObject>
+#include <QApplication>
 #include <QTimer>
-#include <Box2D/Box2D.h>
-#include <QMainWindow>
-#include <iostream>
-#include <QFileInfo>
-#include <QJsonObject>
-#include <QJsonDocument>
-#include <QJsonArray>
-#include <vector>
+#include <QFile>
 
 #define TIMESTEP (1.0f / 60.0f)
 #define V_ITERATIONS 8 //velocity iterations
 #define P_ITERATIONS 3 //position iterations
 
-namespace Balls {
 
+
+namespace Type{
 typedef enum{
-    Red,
-    Yellow,
-    Black,
-    White
-}BallsColor;
-
+    Hole,
+    Ball
+}Type;
 }
 
 
+
+class Ball;
 class MainWindow;
+class Game;
+class Hole;
+
+
+
+struct UserData
+{
+    Type::Type type;
+    Game *game;
+    Ball *ball;
+    Hole *hole;
+};
+
+
+
+class moveBodyTask{
+public:
+    moveBodyTask(Ball *ball, int i);
+    void move();
+
+private:
+    Ball* m_ball;
+    int m_index;
+};
+
+
 
 
 class holeContactListener : public b2ContactListener
@@ -39,20 +58,6 @@ public:
     void BeginContact(b2Contact* contact);
 };
 
-
-
-class Ball
-{
-public:
-    Ball(b2World *world, QJsonObject configObj, int index, std::map<std::__cxx11::string, Balls::BallsColor> *colorMap);
-    b2Body* m_body;
-    ~Ball() {}
-    
-private:
-    Balls::BallsColor m_color;
-    float m_radius;
-    
-};
 
 
 
@@ -66,10 +71,15 @@ public:
     Game();
     Game(MainWindow *w, QApplication *app);
     ~Game();
-    bool createWorld();
+    //bool createWorld();
     void createBallsBody();
-    void buildTable();
+    void createHoles();
 
+    void buildTable();
+    void potBall(Ball *ball);
+
+
+    holeContactListener listener;
 
     QApplication *app;
 
@@ -78,30 +88,29 @@ public:
     Ball* b2whiteball;
 
     QList<Ball*> m_balls;
-    
+    QList<Ball*> m_pottedBalls;
     QJsonObject configObj;
 
+    b2World* m_world;
     //QList<Ball*> pottedBalls;
 
 private:
-    std::map<std::string, Balls::BallsColor> colorMap;
+    std::map<QString, Balls::BallsColor> colorMap;
+    QList<Hole*> m_hole;
+
     QTimer m_myTimer;
     b2Body* cushions[10]; //bandes
-    b2World* m_world;
     MainWindow *m_window;
     b2Vec2 m_gravity;
     b2BodyDef cushionBodyDef[10];
     b2PolygonShape cushionsShape[10];
 
-    b2CircleShape m_holeShape;
-    b2FixtureDef m_holeFixDef;
-    //b2Body m_holeBody;
-    b2BodyDef m_holeBodyDef;
 
     QString config;
     QFile configFile;
     QJsonDocument configDoc;
 
+    QList<moveBodyTask*> m_task;
 
 public slots:
     void update();
@@ -110,6 +119,7 @@ public slots:
 
 
 bool cfgFileExists();
+bool getBallAndHole(b2Contact* contact, Ball *&ball);
 
 
 /////////////////////////////////////

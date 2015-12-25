@@ -5,16 +5,17 @@
 #include <QGraphicsScene>
 #include <QGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
+//#include <qmainwindow.h>
 #include <QPointF>
 #include <QList>
-#include "game.h"
+#include <QMainWindow>
 
 namespace Ui {
 class MainWindow;
 }
 
 
-
+class Game;
 
 class GraphicsScene : public QGraphicsScene
 {
@@ -29,8 +30,6 @@ public slots:
 
 private:
 };
-
-
 
 
 

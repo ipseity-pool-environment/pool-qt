@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <iostream>
-
+#include <game.h>
 
 MainWindow::MainWindow(QApplication *app, QWidget *parent) : app(app), QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -44,9 +44,13 @@ MainWindow::MainWindow(QApplication *app, QWidget *parent) : app(app), QMainWind
     ground.append(scene->addRect(11,1.5,0.5,19, outline, Qt::gray));
 
     
-    
-    holes.append(scene->addEllipse(-0.3, 10.65, 0.75, 0.75, outline, Qt::black));
-    
+
+    holes.append(scene->addEllipse(0.25 - 0.75/2, 1.75 - 0.75/2, 0.75, 0.75, outline, Qt::black));
+    holes.append(scene->addEllipse(0 - 0.75/2, 11 - 0.75/2, 0.75, 0.75, outline, Qt::black));
+    holes.append(scene->addEllipse(0.25 - 0.75/2, 20.25 - 0.75/2, 0.75, 0.75, outline, Qt::black));
+    holes.append(scene->addEllipse(10.75 - 0.75/2, 1.75 - 0.75/2, 0.75, 0.75, outline, Qt::black));
+    holes.append(scene->addEllipse(11 - 0.75/2, 11 - 0.75/2, 0.75, 0.75, outline, Qt::black));
+    holes.append(scene->addEllipse(10.75 - 0.75/2, 20.25 - 0.75/2, 0.75, 0.75, outline, Qt::black));
     
 
     createBallsItem(outline);
