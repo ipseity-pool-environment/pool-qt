@@ -8,11 +8,38 @@ class Ball;
 moveBodyTask::moveBodyTask(Ball *ball, int i) : m_ball(ball), m_index(i)
 {}
 
-void moveBodyTask::move()
+
+bool moveBodyTask::process()
 {
-    m_ball->m_body->SetTransform(b2Vec2(m_index, 0), 0);
+    if(m_ball->getColor() == Balls::White || m_ball->getColor() == Balls::Black)
+    {
+        replaceBall();
+        return false;
+    }
+    else
+    {
+        pot();
+        return true;
+    }
 }
 
+
+void moveBodyTask::pot()
+{
+    m_ball->getBody()->SetTransform(b2Vec2(m_index, 0), 0);
+}
+
+void moveBodyTask::replaceBall()
+{
+    m_ball->userData->game->fault();
+
+    if(m_ball->getColor() == Balls::White)
+        m_ball->getBody()->SetTransform(b2Vec2(5.5, 5.5), 0);
+    else
+        m_ball->getBody()->SetTransform(b2Vec2(5.5, 16.875), 0);
+
+    std::cerr << "FAULT\n";
+}
 
 
 Game::Game()
@@ -20,8 +47,14 @@ Game::Game()
 
 }
 
+
 Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app), m_gravity(0.0f, -9.7f)
 {
+    faults = 0;
+    m_win = false;
+    m_lose = false;
+
+
     if(!cfgFileExists())
     {
         std::cerr << "ERROR: could not find config.json configuration file\n";
@@ -35,6 +68,7 @@ Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app), m_gravity(
         std::cerr << "ERROR: could not open config.json configuration file" << std::endl;
         std::terminate();
     }
+
 
 
     configDoc = QJsonDocument::fromJson(configFile.readAll());
@@ -140,6 +174,12 @@ Game::Game(MainWindow* w, QApplication *app) : m_window(w), app(app), m_gravity(
 }
 
 
+void Game::lose()
+{
+
+}
+
+
 Game::~Game()
 {
     delete m_world;
@@ -159,13 +199,12 @@ Game::~Game()
 void Game::potBall(Ball *ball)
 {
     //m_balls.erase(m_balls.indexOf(ball));
-    m_pottedBalls.append(ball);
-    ball->m_body->SetLinearVelocity(b2Vec2(0,0));
-    m_task.append(new moveBodyTask(ball, m_pottedBalls.size()));
+    ball->getBody()->SetLinearVelocity(b2Vec2(0,0));
+
+    m_task.append(new moveBodyTask(ball, m_pottedBalls.size() + 1));
 
     //ball->m_body->SetGravityScale(1);
 }
-
 
 void Game::initTimer()
 {
@@ -177,19 +216,24 @@ void Game::initTimer()
 
 
 
+
 void Game::update()
 {
     while(m_task.size() != 0)
     {
-        m_task.back()->move();
+        if(m_task.back()->process())
+            m_pottedBalls.append(m_task.back()->getBall());
+
         delete m_task.back();
         m_task.pop_back();
     }
 
     m_world->Step(TIMESTEP, V_ITERATIONS, P_ITERATIONS);
-    app->processEvents(QEventLoop::AllEvents);
+    //app->processEvents(QEventLoop::AllEvents);
     m_window->render();
 }
+
+
 
 
 
@@ -201,8 +245,6 @@ bool cfgFileExists() {
         return false;
     }
 }
-
-
 
 void Game::createBallsBody()
 {
@@ -257,6 +299,7 @@ void Game::createHoles()
         m_hole.at(i)->m_body->CreateFixture(&holeFixDef);
 }
 
+
 bool getBallAndHole(b2Contact *contact, Ball*& ball)
 {
     b2Fixture* fixtureA = contact->GetFixtureA();
@@ -264,17 +307,21 @@ bool getBallAndHole(b2Contact *contact, Ball*& ball)
 
     bool sensorA = fixtureA->IsSensor();
     bool sensorB = fixtureB->IsSensor();
-    if ( ! (sensorA ^ sensorB) )
+    if ( ! (sensorA ^ sensorB) ) //if neither is a sensor then contact is a collision between 2 balls, or a ball and a cushion
               return false;
+
 
     UserData *dataA = static_cast<UserData*>(fixtureA->GetBody()->GetUserData());
     UserData *dataB = static_cast<UserData*>(fixtureB->GetBody()->GetUserData());
 
     if(sensorA) //if A is a sensor then B is a ball
+    {
         ball = dataB->ball;
-
+    }
     else
+    {
         ball = dataA->ball;
+    }
 
     return true;
 }
@@ -292,3 +339,4 @@ void holeContactListener::BeginContact(b2Contact *contact)
 
 
 }
+

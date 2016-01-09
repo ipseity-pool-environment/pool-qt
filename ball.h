@@ -26,15 +26,21 @@ class Ball
 public:
     Ball(Game *game, QJsonObject configObj, int index, std::map<QString, Balls::BallsColor> *colorMap);
     ~Ball();
-    b2Body* m_body;
+
+
+    Balls::BallsColor getColor() const { return m_color; }
+    b2Body* getBody() const { return m_body; }
 
     void startContact() { m_contact = true; }
     void endContact() { m_contact = false; }
     UserData *userData;
+
+
 private:
     Balls::BallsColor m_color;
     float m_radius;
     bool m_contact;
+    b2Body* m_body;
 
 };
 

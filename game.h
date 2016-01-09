@@ -42,7 +42,12 @@ struct UserData
 class moveBodyTask{
 public:
     moveBodyTask(Ball *ball, int i);
-    void move();
+
+    bool process();
+    void pot();
+    void replaceBall();
+
+    Ball* getBall() const { return m_ball; }
 
 private:
     Ball* m_ball;
@@ -78,6 +83,10 @@ public:
     void buildTable();
     void potBall(Ball *ball);
 
+    void fault() { ++faults; }
+
+    void lose();
+
 
     holeContactListener listener;
 
@@ -109,6 +118,13 @@ private:
     QString config;
     QFile configFile;
     QJsonDocument configDoc;
+
+
+    bool m_win;
+    bool m_lose;
+
+    int faults;
+
 
     QList<moveBodyTask*> m_task;
 

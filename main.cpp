@@ -7,13 +7,8 @@ int main(int argc, char *argv[])
     
     QApplication a(argc, argv);
     MainWindow w(&a);
-    /*Game game(&w, &a);
-    w.game = &game;
-    w.scene->game = &game;*/
 
     w.show();
-
-
 
 
     B2_NOT_USED(argc);

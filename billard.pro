@@ -25,7 +25,7 @@ FORMS    += mainwindow.ui
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/Box2D/Box2D/Build/Box2D/ -lBox2
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/Box2D/Box2D/Build/Box2D/ -lBox2d
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/Box2D/Box2D/Build/Box2D/ -lBox2D
 
 win32{
 INCLUDEPATH += $$PWD/Box2D/Box2D

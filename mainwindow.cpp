@@ -17,6 +17,7 @@ MainWindow::MainWindow(QApplication *app, QWidget *parent) : app(app), QMainWind
 
 
     bsize = game->configObj["BallsSize"].toDouble();
+    wbsize = game->configObj["WhiteBallSize"].toDouble();
 
     scene->setBackgroundBrush(Qt::white);
 
@@ -77,10 +78,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::render()
 {
-    whiteBall->setPos(game->b2whiteball->m_body->GetPosition().x-0.25 , game->b2whiteball->m_body->GetPosition().y-0.25);
+    whiteBall->setPos(game->b2whiteball->getBody()->GetPosition().x-(wbsize/2) , game->b2whiteball->getBody()->GetPosition().y-(wbsize/2));
 
     for(int i = 0; i < 15; ++i)
-        balls.at(i)->setPos(game->m_balls[i]->m_body->GetPosition().x-0.25 , game->m_balls[i]->m_body->GetPosition().y-0.25);
+        balls.at(i)->setPos(game->m_balls[i]->getBody()->GetPosition().x-(bsize/2) , game->m_balls[i]->getBody()->GetPosition().y-(bsize/2));
 
 
 
@@ -96,7 +97,7 @@ GraphicsScene::GraphicsScene(QObject *parent) :
 
 void GraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
-    game->b2whiteball->m_body->ApplyLinearImpulse(b2Vec2((float32)mouseEvent->scenePos().x() - game->b2whiteball->m_body->GetPosition().x, (float32)mouseEvent->scenePos().y() - game->b2whiteball->m_body->GetPosition().y), game->b2whiteball->m_body->GetPosition(), true);
+    game->b2whiteball->getBody()->ApplyLinearImpulse(b2Vec2((float32)mouseEvent->scenePos().x() - game->b2whiteball->getBody()->GetPosition().x, (float32)mouseEvent->scenePos().y() - game->b2whiteball->getBody()->GetPosition().y), game->b2whiteball->getBody()->GetPosition(), true);
 
     QGraphicsScene::mouseReleaseEvent(mouseEvent);
 }
@@ -104,7 +105,7 @@ void GraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 void MainWindow::createBallsItem(QPen outline)
 {
-    whiteBall = scene->addEllipse(0, 0, bsize, bsize, outline, Qt::white);
+    whiteBall = scene->addEllipse(0, 0, wbsize, wbsize, outline, Qt::white);
 
     balls.append(scene->addEllipse(0, 0, bsize, bsize, outline, Qt::yellow));
     balls.append(scene->addEllipse(0, 0, bsize, bsize, outline, Qt::red));

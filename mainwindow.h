@@ -59,6 +59,7 @@ public slots:
 private:
     Ui::MainWindow *ui;
     float bsize;
+    float wbsize;
     Game *game;
     QApplication *app;
 
