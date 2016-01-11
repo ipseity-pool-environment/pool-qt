@@ -319,14 +319,14 @@ bool getBallAndHole(b2Contact *contact, Ball*& ball)
 
     bool sensorA = fixtureA->IsSensor();
     bool sensorB = fixtureB->IsSensor();
-    if ( ! (sensorA ^ sensorB) ) //if neither is a sensor then contact is a collision between 2 balls, or a ball and a cushion
+    if ( ! (sensorA ^ sensorB) ) //si aucune des fixture est un Sensor, alors le contact s'effectue entre deux boules, ou entre une boule et une bande
               return false;
 
 
     UserData *dataA = static_cast<UserData*>(fixtureA->GetBody()->GetUserData());
     UserData *dataB = static_cast<UserData*>(fixtureB->GetBody()->GetUserData());
 
-    if(sensorA) //if A is a sensor then B is a ball
+    if(sensorA) //si A est un Sensor alors B est une Ball
     {
         ball = dataB->ball;
     }

@@ -2,7 +2,6 @@
 #define BALL_H
 
 namespace Balls {
-
 typedef enum{
     Red,
     Yellow,
