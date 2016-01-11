@@ -31,8 +31,8 @@ public:
     Balls::BallsColor getColor() const { return m_color; }
     b2Body* getBody() const { return m_body; }
 
-    void startContact() { m_contact = true; }
-    void endContact() { m_contact = false; }
+    /*void startContact() { m_contact = true; }
+    void endContact() { m_contact = false; }*/
     UserData *userData;
 
 

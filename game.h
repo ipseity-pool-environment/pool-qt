@@ -47,7 +47,7 @@ public:
     void pot();
     void replaceBall();
 
-    Ball* getBall() const { return m_ball; }
+    Ball* getBall() const { return m_ball; } //accesseur
 
 private:
     Ball* m_ball;

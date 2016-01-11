@@ -5,11 +5,12 @@
 
 class Ball;
 
-moveBodyTask::moveBodyTask(Ball *ball, int i) : m_ball(ball), m_index(i)
+
+moveBodyTask::moveBodyTask(Ball *ball, int i) : m_ball(ball), m_index(i) //constructeur
 {}
 
 
-bool moveBodyTask::process()
+bool moveBodyTask::process() //Vérifie la couleur de la bille et appelle la fonction correspondante
 {
     if(m_ball->getColor() == Balls::White || m_ball->getColor() == Balls::Black)
     {
@@ -24,14 +25,15 @@ bool moveBodyTask::process()
 }
 
 
-void moveBodyTask::pot()
+void moveBodyTask::pot() //met la boule sous le billard
 {
     m_ball->getBody()->SetTransform(b2Vec2(m_index, 0), 0);
 }
 
+
 void moveBodyTask::replaceBall()
 {
-    m_ball->userData->game->fault();
+    m_ball->userData->game->fault(); //incrémente le compteur de faute
 
     if(m_ball->getColor() == Balls::White)
         m_ball->getBody()->SetTransform(b2Vec2(5.5, 5.5), 0);
@@ -198,13 +200,11 @@ Game::~Game()
 
 void Game::potBall(Ball *ball)
 {
-    //m_balls.erase(m_balls.indexOf(ball));
     ball->getBody()->SetLinearVelocity(b2Vec2(0,0));
 
     m_task.append(new moveBodyTask(ball, m_pottedBalls.size() + 1));
-
-    //ball->m_body->SetGravityScale(1);
 }
+
 
 void Game::initTimer()
 {
@@ -217,19 +217,18 @@ void Game::initTimer()
 
 
 
-void Game::update()
+void Game::update() //met à jour la position des billes
 {
-    while(m_task.size() != 0)
+    while(m_task.size() != 0) //effectuer toutes les tâches tant qu'il y en a
     {
-        if(m_task.back()->process())
-            m_pottedBalls.append(m_task.back()->getBall());
+        if(m_task.back()->process()) //process renvoit vrai si c'était une bille jaune ou rouge
+            m_pottedBalls.append(m_task.back()->getBall()); //donc on ajoute la bille en question à la liste les billes rentrées
 
         delete m_task.back();
         m_task.pop_back();
     }
 
     m_world->Step(TIMESTEP, V_ITERATIONS, P_ITERATIONS);
-    //app->processEvents(QEventLoop::AllEvents);
     m_window->render();
 }
 
@@ -300,6 +299,19 @@ void Game::createHoles()
 }
 
 
+void holeContactListener::BeginContact(b2Contact *contact)
+{
+    /*void* bodyUserDataA = contact->GetFixtureA()->GetBody()->GetUserData();
+    void* bodyUserDataB = contact->GetFixtureB()->GetBody()->GetUserData();*/
+    Ball *ball;
+
+
+    if(getBallAndHole(contact, ball))
+        ball->userData->game->potBall(ball);
+
+
+}
+
 bool getBallAndHole(b2Contact *contact, Ball*& ball)
 {
     b2Fixture* fixtureA = contact->GetFixtureA();
@@ -326,17 +338,4 @@ bool getBallAndHole(b2Contact *contact, Ball*& ball)
     return true;
 }
 
-
-void holeContactListener::BeginContact(b2Contact *contact)
-{
-    /*void* bodyUserDataA = contact->GetFixtureA()->GetBody()->GetUserData();
-    void* bodyUserDataB = contact->GetFixtureB()->GetBody()->GetUserData();*/
-    Ball *ball;
-
-
-    if(getBallAndHole(contact, ball))
-        ball->userData->game->potBall(ball);
-
-
-}
 
